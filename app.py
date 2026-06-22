@@ -101,12 +101,19 @@ def get_coaching_feedback(face_emotion, speech_emotion, sentiment):
     return "\n\n".join(feedback)
 
 # ── Full analysis ──────────────────────────────────────────────
-def full_analysis(image, audio):
+def full_analysis(image, audio, manual_text=""):
     # Face
     face_emotion, annotated_image = analyze_face(image)
 
     # Audio
     speech_emotion, speech_score, sentiment, sent_score, transcription = analyze_audio(audio)
+
+    # If user typed manually, override transcription for sentiment
+    if manual_text and manual_text.strip():
+        transcription = manual_text.strip()
+        sent_result = sentiment_analyzer(transcription)
+        sentiment = sent_result[0]['label']
+        sent_score = round(sent_result[0]['score'] * 100, 1)
 
     # Feedback
     feedback = get_coaching_feedback(face_emotion, speech_emotion, sentiment)
@@ -154,6 +161,14 @@ with gr.Blocks(title="SentioAI", theme=gr.themes.Soft()) as demo:
                 type="numpy",
                 label="Click mic to record, click stop when done",
             )
+        
+        with gr.Row():
+            text_input = gr.Textbox(
+                label="✍️ Step 3 — Type something (optional)",
+                placeholder="e.g. I am feeling confident today and ready for this interview...",
+                lines=3,
+                info="If you type here, this text will be used for sentiment analysis instead of your speech transcription."
+        )
 
     analyze_btn = gr.Button("🎬 Analyze Now!", variant="primary", size="lg")
 
@@ -170,7 +185,7 @@ with gr.Blocks(title="SentioAI", theme=gr.themes.Soft()) as demo:
 
     analyze_btn.click(
         fn=full_analysis,
-        inputs=[image_input, audio_input],
+        inputs=[image_input, audio_input, text_input],
         outputs=[face_output, report_output]
     )
 
