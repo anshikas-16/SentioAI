@@ -1,0 +1,10 @@
+gradio
+deepface
+tf-keras
+opencv-python-headless
+transformers
+torch
+torchaudio
+openai-whisper
+numpy
+Pillow
